@@ -9,6 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.528.0",
+    "axios": "^0.19.0",
     "mercadolibre": "0.0.13"
   }
 }
