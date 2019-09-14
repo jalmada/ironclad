@@ -1,23 +1,5 @@
-//Access Token:APP_USR-8714978096978885-090819-a045fa15acb13d110d2f6691c7f4edff-469263818
-//User Id:469263818
+//My User
 //Nickname:ALJO8929348
-
-//AppId: 8714978096978885
-//Secret: T9DbCl2dAEeKZtqMFZYWZQSrHYgoE28v
-
-//Auth Token: TG-5d755427dbc4b80006e36c46-469263818
-
-//https://developers.mercadolibre.com.mx/es_mx/autenticacion-y-autorizacion/#obtener_token
-
-//curl -X POST -H "Content-Type: application/json" -d '{"site_id":"MLM"}' https://api.mercadolibre.com/users/test_user?access_token=APP_USR-8714978096978885-090819-a045fa15acb13d110d2f6691c7f4edff-469263818
-//curl -X POST -H "Content-Type: application/json" -d '{"site_id":"MLM"}' https://api.mercadolibre.com/oauth/token?grant_type=authorization_code&client_id=8714978096978885&client_secret=T9DbCl2dAEeKZtqMFZYWZQSrHYgoE28v&code=TG-5d755427dbc4b80006e36c46-469263818&redirect_uri=localhost:300
-//https://auth.mercadolibre.com.mx/authorization?response_type=code&client_id=APP_USR-8714978096978885-090819-a045fa15acb13d110d2f6691c7f4edff-469263818
-//Test user
-//{"id":469261720,"nickname":"TETE9841944","password":"qatest960","site_status":"active","email":"test_user_29952594@testuser.com"}
-
-
-//https://api.mercadolibre.com/oauth/token?grant_type=authorization_code&client_id=8714978096978885&client_secret=T9DbCl2dAEeKZtqMFZYWZQSrHYgoE28v&code=SERVER_GENERATED_AUTHORIZATION_CODE&redirect_uri=
-
 
 //----
 //App id and secret Key
@@ -27,6 +9,7 @@
 //This token can be obtained using the refresh key strored after the first time the user login
 //https://developers.mercadolibre.com/en_us/products-authentication-authorization/
 //---- Test User: "nickname":"TETE9841944","password":"qatest960"
+//---- Test User2: "nickname":"TT327858","password":"qatest730" user_id: 469263818
 //---- Current User APP ID Token, (6 hrs only): APP_USR-8714978096978885-091301-9852c2b2fef0cdd023f378f1f4acdbc2-469261720
 //----
 //To get the user Access Token use this:
@@ -37,57 +20,45 @@
 //To get the access CODE and Refresh code use this:
 //https://api.mercadolibre.com/oauth/token?grant_type=authorization_code&client_id=%d&client_secret=%s&code=%s&redirect_uri=%s
 
-
+//Create Test User
+//1. Get current Jose almada Auth Token
+//2. curl -X POST -H "Content-Type: application/json" -d '{"site_id":"MLM"}'  https://api.mercadolibre.com/users/test_user?access_token=APP_USR-8714978096978885-091400-ed7625d3a00270ce2e9cbf07418a3206-469263818
 
 var meli = require('mercadolibre'); 
 const axios = require('axios');
 var AWS = require('aws-sdk');
-
-
-const app_userId = 'APP_USR-8714978096978885-091301-9852c2b2fef0cdd023f378f1f4acdbc2-469261720'; //This one is authorization token
-const client_id = 8714978096978885; //Aka the app itself Id
-const client_secret = 'T9DbCl2dAEeKZtqMFZYWZQSrHYgoE28v'; //Aka the app itself secret
-const code = 'TG-5d7b019dc9a4da000602b4a1-469261720'; //User code
-const app_callbackUrl = 'https://localhost:3000';
-const refresh_token = '';
-const meli_tokens_db = 'meli_tokens';
-
 AWS.config.update({region: 'us-east-1'});
 var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-
-
-function LogIn()
+const meli_tokens_tableName = 'meli_tokens';
 
 function Authorize(client_id, client_secret, code, app_callbackUrl){
     const authTokenUrl = `https://api.mercadolibre.com/oauth/token?grant_type=authorization_code&client_id=${client_id}&client_secret=${client_secret}&code=${code}&redirect_uri=${app_callbackUrl}`;
-    UpdateTokens(authTokenUrl);
-    
+    UpdateTokens(authTokenUrl);   
 }
 
-function RefreshToken(client_id, client_secret, refresh_token){
+function AuthorizeWithRefreshToken(client_id, client_secret, refresh_token){
     const authRefreshTokenUrl = `https://api.mercadolibre.com/oauth/token?grant_type=refresh_token&client_id=${client_id}&client_secret=${client_secret}&refresh_token=${refresh_token}`; //Aka the app itself Id
     UpdateTokens(authRefreshTokenUrl);
 }
 
-function UpdateTokens(username, url){
+function UpdateTokens(url){
     axios.post(url)
     .then((res) => {
-        console.log(`access token: ${data.access_token}`);
-        console.log(`refresh token: ${data.refresh_token}`)
-        
-       
+        console.log(`userId: ${res.data.user_id}`);
+        console.log(`access token: ${res.data.access_token}`);
+        console.log(`refresh token: ${res.data.refresh_token}`)
+        SaveTokens(res.data.user_id, res.data.access_token, res.data.refresh_token);
     })
     .catch((error) => {
         console.error(error)
     });
 }
 
-
-function SaveTokens(username, access_token, refresh_token){
+function SaveTokens(user_id, access_token, refresh_token){
     var params = {
-        TableName: meli_tokens_db,
+        TableName: meli_tokens_tableName,
         Item: {
-            'username' : {S: username},
+            'user_id' : {N: user_id.toString()},
             'access_token' : {S: access_token},
             'refresh_token' : {S: refresh_token}
         }
@@ -101,14 +72,36 @@ function SaveTokens(username, access_token, refresh_token){
     });
 }
 
-//var meliObject = new meli.Meli(client_id, client_secret);//, access_token, refresh_token);
+function LogIn(user_id, client_id, client_secret, code, app_callbackUrl){
+    var params = {
+        TableName: meli_tokens_tableName,
+        Key: {
+            user_id : {N: user_id.toString()}
+        },
+        ProjectionExpression: 'refresh_token'
+    };
 
-//var redirect_uri = meliObject.getAuthURL();
+    //Get Refresh Token
+    ddb.getItem(params, function(err, data) {
+        if (err) {
+            throw `Error", ${err}`;
+        }
+        if(data.Item){
+            console.log("Existing User", data.Item.refresh_token.S);
+            AuthorizeWithRefreshToken(client_id, client_secret, data.Item.refresh_token.S);
+        } else {
+            console.log("New user found");
+            Authorize(client_id, client_secret, code, app_callbackUrl);
+        }
+    });
+}
+
+const client_id = 8714978096978885; //Aka the app itself Id
+const client_secret = 'T9DbCl2dAEeKZtqMFZYWZQSrHYgoE28v'; //Aka the app itself secret
+const code = 'TG-5d7c4706c9a4da00062c15b7-469263818'; //User code
+const app_callbackUrl = 'https://localhost:3000';
+const user_id = 469263818;
 
 
-
-
-
-// meliObject.authorize('TG-5d755427dbc4b80006e36c46-469263818', redirect_uri, (result) => {
-//     var r = result;
-// } ) 
+//User Id will be 0 if Called from the callback so this will get the refresh token and auth token alongside the user id
+LogIn(user_id, client_id, client_secret, code, app_callbackUrl);
