@@ -1,3 +1,5 @@
+//App testing
+
 const LogIn = require('./lib/login');
 const config_app = require('./config/app.json');
 
