@@ -1,18 +1,18 @@
 'use strict';
 const LogIn = require('./lib/login');
 const listing = require('./lib/listing');
+const competition = require('./lib/competition');
 const configApp = require('./config/app.json');
 
 async function Main(){
     let user_id = 469261720;
 
-    let authToken = 'APP_USR-8714978096978885-091602-001b02fdc7bc0794742e9d9514740cb1-469261720'; //await LogIn(user_id, configApp.client_id, configApp.client_secret, null, null)
-        //.catch(err => console.log(err));
+    let authToken = await LogIn(user_id, configApp.client_id, configApp.client_secret, null, null)
+        .catch(err => console.log(err));
 
     if(!authToken){
         throw ("Auth Token not found");
     }
-
 
     let user = {
         user_id: user_id,
@@ -27,6 +27,9 @@ async function Main(){
     }
 
     console.log(JSON.stringify(listings));
+
+    let product_id = 'ML12345';
+    competition.GetCompetition(user, product_id);
 }
 
 Main();
