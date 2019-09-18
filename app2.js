@@ -5,9 +5,9 @@ const competition = require('./lib/competition');
 const configApp = require('./config/app.json');
 
 async function Main(){
-    let user_id = 469261720;
+    let userId = 469261720;
 
-    let authToken = await LogIn(user_id, configApp.client_id, configApp.client_secret, null, null)
+    let authToken = await LogIn(userId, configApp.clientId, configApp.clientSecret, null, null)
         .catch(err => console.log(err));
 
     if(!authToken){
@@ -15,8 +15,8 @@ async function Main(){
     }
 
     let user = {
-        user_id: user_id,
-        access_token: authToken
+        userId: userId,
+        accessToken: authToken
     };
 
     let listingIds = await listing.GetListings(user);
@@ -28,8 +28,8 @@ async function Main(){
 
     console.log(JSON.stringify(listings));
 
-    let product_id = 'ML12345';
-    competition.GetCompetition(user, product_id);
+    let productId = 'ML12345';
+    competition.GetCompetition(user, productId);
 }
 
 Main();

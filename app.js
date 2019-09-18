@@ -1,19 +1,19 @@
 //App testing
 
 const LogIn = require('./lib/login');
-const config_app = require('./config/app.json');
+const configApp = require('./config/app.json');
 
 const http = require('http');
 var url = require('url');
 
 //create a server object:
 http.createServer(async function (req, res) {
-    let url_parts = url.parse(req.url, true);
-    let query = url_parts.query;
+    let urlParts = url.parse(req.url, true);
+    let query = urlParts.query;
     let code = query['code'];
 
     if(code){
-        let authToken = await LogIn(0, config_app.client_id, config_app.client_secret, code, config_app.callbackUrl)
+        let authToken = await LogIn(0, configApp.clientId, configApp.clientSecret, code, configApp.callbackUrl)
         .catch(err => console.log(err));
         console.log(authToken);
     }

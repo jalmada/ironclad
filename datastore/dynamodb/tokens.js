@@ -1,62 +1,70 @@
 'use strict';
 const AWS = require('aws-sdk');
-const meli_tokens_tableName = 'meli_tokens';
+const tokens_tableName = 'tokens';
 AWS.config.update({region: 'us-east-1'});
 
-async function GetRefreshToken(user_id){
+async function GetRefreshToken(userId){
     return new Promise(async (resolve, reject) => {
         var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
         var params = {
-            TableName: meli_tokens_tableName,
+            TableName: tokens_tableName,
             Key: {
-                user_id : {N: user_id.toString()}
+                userId : {S: userId.toString()}
             },
-            ProjectionExpression: 'refresh_token'
+            ProjectionExpression: 'refreshToken'
         };
 
         ddb.getItem(params, function(err, data) {
-            if (err) {
-                reject(err);
+            if(!data.Item){
+                resolve(null);
+                return;
             }
 
-            resolve(data.Item.refresh_token.S || '');
+            if (err) {
+                reject(err);
+            } else {
+                resolve(data.Item.refreshToken.S || null);
+            }
         });
     });
 }
 
-async function GetUserToken(user_id){
+async function GetUserToken(userId){
     return new Promise(async (resolve, reject) => {
         var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
         var params = {
-            TableName: meli_tokens_tableName,
+            TableName: tokens_tableName,
             Key: {
-                user_id : {N: user_id.toString()}
+                userId : {S: userId.toString()}
             },
-            ProjectionExpression: 'access_token'
+            ProjectionExpression: 'accessToken'
         };
     
         ddb.getItem(params, function(err, data) {
-            console.log(`GetItem Done ${data}`);
+            if(!data.Item){
+                resolve(null);
+                return;
+            }
     
             if (err) {
                 reject(err);
+            } else {
+                resolve(data.Item.accessToken.S || null);
             }
-
-            resolve(data.Item.access_token.S || '');
         });
     });
 }
 
-async function SaveTokens(user_id, access_token, refresh_token){
+async function SaveTokens(userId, accessToken, refreshToken){
     return new Promise(async (resolve, reject) => {
         var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
         var params = {
-            TableName: meli_tokens_tableName,
+            TableName: tokens_tableName,
             Item: {
-                'user_id' : {N: user_id.toString()},
-                'access_token' : {S: access_token},
-                'refresh_token' : {S: refresh_token}
+                'userId' : {S: userId.toString()},
+                'accessToken' : {S: accessToken},
+                'refreshToken' : {S: refreshToken}
             }
         };
 
@@ -64,8 +72,9 @@ async function SaveTokens(user_id, access_token, refresh_token){
             if (err) {
                 console.log(`Error saving Token: ${err}`);
                 reject(err);
+            } else {
+                resolve(null);
             }
-            resolve(null);
         });
     });
 }

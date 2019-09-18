@@ -1,17 +1,16 @@
 'use strict';
-var AWS = require('aws-sdk');
-const meli_tokens_tableName = 'meli_competition';
+const AWS = require('aws-sdk');
+const competition_tableName = 'competition';
+AWS.config.update({region: 'us-east-1'});
 
-async function GetCompetition(user_id, product_id){
+async function GetCompetition(userId, productId){
     let getCompetitionProm = new Promise(async (resolve, reject) => {
-        AWS.config.update({region: 'us-east-1'});
         var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
         var params = {
-            TableName: meli_tokens_tableName,
+            TableName: competition_tableName,
             Key: {
-                'user_id' : {N: user_id.toString()},
-                'product_id': {N: product_id.toString()}
+                'userId-productId' : {S: `${userId}-${productId}`}
             },
             ProjectionExpression: 'competition'
         };
@@ -19,9 +18,9 @@ async function GetCompetition(user_id, product_id){
         ddb.getItem(params, function(err, data) {
             if (err) {
                 reject(err);
+            } else {
+                resolve(data);
             }
-
-            resolve(data);
         });
     });
 
@@ -29,14 +28,13 @@ async function GetCompetition(user_id, product_id){
     return competition;
 }
 
-async function SaveCompetition(user_id, product_id, competition){
-    let saveCompetitionProm = new Promise(async (resolve, reject) => {
+async function SaveCompetition(userId, productId, competition){
+    return new Promise(async (resolve, reject) => {
         var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
         var params = {
-            TableName: meli_tokens_tableName,
+            TableName: competition_tableName,
             Item: {
-                'user_id' : {N: user_id.toString()},
-                'product_id' : {N: product_id.toString()},
+                'userId-productId' : {S: `${userId}-${productId}`},
                 'competition' : {S: JSON.stringify(competition)}
             }
         };
@@ -45,13 +43,11 @@ async function SaveCompetition(user_id, product_id, competition){
             if (err) {
                 console.log(`Error saving Token: ${err}`);
                 reject(err);
+            } else {
+                resolve(null);
             }
-            resolve(null);
         });
     });
-
-    let error = await saveCompetitionProm;
-    return error;
 }
 
 module.exports = {
