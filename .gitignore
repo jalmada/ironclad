@@ -4,3 +4,4 @@ package-lock.json
 instructions.txt
 *.zip
 config/app.json
+sample*.txt

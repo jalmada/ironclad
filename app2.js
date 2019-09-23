@@ -26,10 +26,10 @@ async function Main(){
         listings.push(await listing.GetListing(listingIds[i], user));
     }
 
-    console.log(JSON.stringify(listings));
 
-    let productId = 'ML12345';
-    competition.GetCompetition(user, productId);
+    //console.log(JSON.stringify(listings));
+
+    let comp = competition.GetCompetition(listingIds[0], user);
 }
 
 Main();
